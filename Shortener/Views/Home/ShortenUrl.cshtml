@@ -1,0 +1,88 @@
+﻿@model UrlShortener.Models.ShortenUrlViewModel
+
+
+<div class="container-fluid py-4">
+    @Html.AntiForgeryToken();    
+    <div class="row">
+        @Html.ValidationSummary()
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-8">
+            <div class="p-5 mb-4 bg-light rounded-3">
+
+                <h2 class="display-5">Paste your URL</h2>
+                <form class="form-urlshorten mb-5" method="post">
+                    @Html.ValidationMessageFor(m => m.Url, "", new { @class = "text-danger" })
+                    <div class="input-group input-group-lg mb-3">
+                        @Html.TextBoxFor(m => m.Url, new { @id = "inputAddress", @class = "form-control", @placeholder = "Enter your URL" })
+
+                        <button id="submitButton" type="submit" class="btn btn-lg btn-primary"><i class="fa fa-exchange"></i> Get short</button>
+                    </div>
+                    <div class="spinner-border text-primary d-none" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+
+                </form>
+                <div id="ShortenedResult" class="d-none">
+                    <h2>Shortened Result</h2>
+                    <p>Copy the shortened link and share it as you please...</p>
+                    <div class="input-group ">
+                        <input type="text" placeholder="Shortened URL" class="form-control" id="shortUrl" />
+                        <button id="copyButton" class="btn btn-secondary" type="button"><i class="fa fa-clipboard"></i> Copy</button>
+                    </div>
+                    <span id="shortCopied" class="badge float-end mt-3 bg-primary d-none">Copied</span>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts{
+    @Scripts.Render("~/bundles/jquery")
+@Scripts.Render("~/bundles/jqueryval")
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $("#inputAddress").click(function (e) {
+                if ($("#ShortenedResult").hasClass("d-none") == false)
+                    $("#ShortenedResult").toggleClass('d-none');
+
+                if ($("#shortCopied").hasClass("d-none") == false)
+                    $("#shortCopied").toggleClass('d-none');
+            })
+
+            $(".form-urlshorten").submit(function (e) {
+                if ($(".form-urlshorten").valid()) {
+                    $(".spinner-border").toggleClass('d-none');
+                    var formData = $(".form-urlshorten").serialize();
+                    $.ajax({
+                        type: "POST",
+                        url: '@Url.Action("ShortenUrl")',
+                        data: formData,
+                        dataType: "json",
+                        success: function (response) {
+                            $(".spinner-border").toggleClass('d-none');
+                            $("#shortUrl").val(response);
+                            $("#ShortenedResult").toggleClass('d-none');
+
+                        },
+                        error: function (response) {
+                            $(".form-urlshorten").html(response.responseText);
+                        }
+                    })
+                }
+
+                e.preventDefault();
+            });
+
+            $("#copyButton").click(function (e) {
+                navigator.clipboard.writeText($("#shortUrl").val());
+                $("#shortCopied").toggleClass('d-none');
+            })
+
+        });
+    </script>
+}
